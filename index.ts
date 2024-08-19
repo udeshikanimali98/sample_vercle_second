@@ -157,7 +157,7 @@ const corsConfig = {
 };
 
 // Middleware
-app.use("/webhook", express.raw({ type: "application/json" }));
+//app.use("/webhook", express.raw({ type: "application/json" }));
 app.use(logRequest);
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -176,37 +176,38 @@ app.use("/api/admin", verifyRole(Role.SUPER_ADMIN, Role.ADMIN));
 // Server setup
 let server: http.Server;
 
-if (isProduction) {
-  server = https.createServer({
-    key: fs.readFileSync(process.env.SERVER_KEY_PATH || "server.key"),
-    cert: fs.readFileSync(process.env.SERVER_CERT_PATH || "server.cert"),
-  }, app);
-} else {
-  server = http.createServer(app);
-}
+// if (isProduction) {
+//   server = https.createServer({
+//     key: fs.readFileSync(process.env.SERVER_KEY_PATH || "server.key"),
+//     cert: fs.readFileSync(process.env.SERVER_CERT_PATH || "server.cert"),
+//   }, app);
+// } else {
+//   server = http.createServer(app);
+// }
+server = http.createServer(app);
 
 // Initialize Socket.io
-export const io: Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any> = new Server(server, {
-  cors: corsConfig,
-  transports: ["polling", "websocket"],
-});
+// export const io: Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any> = new Server(server, {
+//   cors: corsConfig,
+//   transports: ["polling", "websocket"],
+// });
 
-io.on("connection", (socket) => {
-  console.log("A user connected");
+// io.on("connection", (socket) => {
+//   console.log("A user connected");
 
-  socket.emit("new-connect", { socket_id: socket.id });
+//   socket.emit("new-connect", { socket_id: socket.id });
 
-  socket.on("sendMessage", ({ recipientSocketId, message }) => {
-    io.to(recipientSocketId).emit("newMessage", { message });
-    console.log('Message sent');
-  });
+//   socket.on("sendMessage", ({ recipientSocketId, message }) => {
+//     io.to(recipientSocketId).emit("newMessage", { message });
+//     console.log('Message sent');
+//   });
 
-  socket.on("disconnect", () => {
-    console.log("User disconnected");
-  });
+//   socket.on("disconnect", () => {
+//     console.log("User disconnected");
+//   });
 
-  // Handle other socket events as needed
-});
+//   // Handle other socket events as needed
+// });
 
 // Start the server
 server.listen(PORT, () => {
