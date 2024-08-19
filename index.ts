@@ -215,6 +215,6 @@ server.listen(PORT, () => {
 
 // Initialize routes and error handling
 routes.initRoutes(app);
-app.use(handleError);
+//app.use(handleError);
 
 export default app;
