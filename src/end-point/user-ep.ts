@@ -331,15 +331,11 @@ export namespace UserEp {
       }
       // Update user's password
       //const user = await UserDao.getUserByEmail(user.email);
+      
       if (user) {
         // const hashed = await Util.passwordHashing(newPassword);
         const newHashedPassword = await Util.passwordHashing(newPassword);
-        //await UserDao.updateUser(user?._id, { password: newHashedPassword });
-        if (user && typeof user._id === 'string') {
-          await UserDao.updateUser(user._id, { password: newHashedPassword });
-        } else {
-          throw new Error('User ID is not valid');
-        }
+        await UserDao.updateUser((user._id as ObjectId).toString(), { password: newHashedPassword });
 
         // Delete OTP after successful password reset
         await OTPDao.deleteOTP(user.email);
