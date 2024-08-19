@@ -124,15 +124,14 @@
 
 
 /// <reference path="global.d.ts" />
-import dotenv from "dotenv";
-dotenv.config();
+require("dotenv").config();
 
 import express from "express";
 import bodyParser from "body-parser";
 import fs from "fs";
 import https from "https";
 import morgan from "morgan";
-import { initRoutes } from "./src/routes/in";
+import * as routes from "./src/routes/in";
 import { logRequest } from "./src/middleware/request-logger";
 import { handleError } from "./src/middleware/error-handler";
 import { Authentication } from "./src/middleware/authentication";
@@ -144,55 +143,43 @@ import { Role } from "./src/models/user-model";
 import { Server } from "socket.io";
 import * as http from "http";
 
-const production = process.env.NODE_ENV === "production";
-const PORT = process.env.PORT || 4000;
+const PORT: number = parseInt(process.env.PORT || "4000", 10);
+const isProduction = process.env.NODE_ENV === "production";
 
+// Initialize database and middleware
 databaseSetup();
 const app = express();
-
 app.use("/webhook", express.raw({ type: "application/json" }));
 app.use(logRequest);
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-
 passportStartup(app);
 app.use(morgan("combined"));
 
-if (!production) {
-  app.use(
-    cors({
-      origin: "*",
-      allowedHeaders: [
-        "Content-Type",
-        "Access-Control-Allow-Headers",
-        "Access-Control-Allow-Origin",
-        "Authorization",
-        "X-Requested-With",
-        "Cache-Control",
-      ],
-    })
-  );
+// CORS configuration
+if (!isProduction) {
+  app.use(cors({
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true,
+  }));
 }
 
+// API routes
 app.use("/api/auth", Authentication.verifyToken);
 app.use("/api/admin", Authentication.verifyToken);
 app.use("/api/admin", verifyRole(Role.SUPER_ADMIN, Role.ADMIN));
 
-let server: http.Server;
-
-if (production) {
-  server = https.createServer(
-    {
+// Initialize server
+const server: http.Server = isProduction
+  ? https.createServer({
       key: fs.readFileSync(process.env.SERVER_KEY_PATH || "server.key"),
       cert: fs.readFileSync(process.env.SERVER_CERT_PATH || "server.cert"),
-    },
-    app
-  );
-} else {
-  server = http.createServer(app);
-}
+    }, app)
+  : http.createServer(app);
 
-const io = new Server(server, {
+// Initialize Socket.io
+export const io: Server = new Server(server, {
   cors: {
     origin: "*",
     methods: ["PUT", "GET", "POST", "DELETE", "OPTIONS"],
@@ -204,15 +191,11 @@ const io = new Server(server, {
 io.on("connection", (socket) => {
   console.log("A user connected");
 
-  if (socket) {
-    io.to(socket.id).emit("new-connect", { socket_id: socket.id });
-    console.log("========new connect=================");
-  }
+  socket.emit("new-connect", { socket_id: socket.id });
 
-  socket.on("sendMessage", (data) => {
-    const { recipientSocketId, message } = data;
+  socket.on("sendMessage", ({ recipientSocketId, message }) => {
     io.to(recipientSocketId).emit("newMessage", { message });
-    console.log("========new send message emit=================");
+    console.log('Message sent');
   });
 
   socket.on("disconnect", () => {
@@ -220,11 +203,14 @@ io.on("connection", (socket) => {
   });
 });
 
+// Start the server
 server.listen(PORT, () => {
-  console.log(`--> Server successfully started at port :: ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
 
-initRoutes(app);
+// Initialize routes and error handling
+routes.initRoutes(app);
 app.use(handleError);
 
 export default app;
+
