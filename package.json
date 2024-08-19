@@ -8,8 +8,6 @@
   },
   "scripts": {
     "start": "nodemon --exec ts-node index.ts -e ts",
-    "build": "tsc",
-    "start:prod": "node index.ts",
     "seed": "ts-node src/seed/seed-runner",
     "test": "NODE_ENV=test PORT=3011 mocha -r ts-node/register test/**/*.test.ts --exit",
     "test:watch": "nodemon -e ts --exec mocha -r ts-node/register test/**/*.test.ts"
