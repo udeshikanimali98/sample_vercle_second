@@ -6,7 +6,7 @@ import bodyParser from "body-parser";
 import fs from "fs";
 import https from "https";
 import morgan from "morgan";
-import * as routes from "./src/routes";
+import * as routes from "./src/routes/in";
 import { logRequest } from "./src/middleware/request-logger";
 import { handleError } from "./src/middleware/error-handler";
 import { Authentication } from "./src/middleware/authentication";
