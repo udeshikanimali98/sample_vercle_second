@@ -141,50 +141,53 @@ import cors from "cors";
 import { verifyRole } from "./src/middleware/verify-role";
 import { Role } from "./src/models/user-model";
 import { Server } from "socket.io";
+import { DefaultEventsMap } from "socket.io/dist/typed-events";
 import * as http from "http";
 
-const PORT: number = parseInt(process.env.PORT || "4000", 10);
+// Initialize Express app
+const app = express();
+const PORT = parseInt(process.env.PORT || "4000", 10);
 const isProduction = process.env.NODE_ENV === "production";
 
-// Initialize database and middleware
-databaseSetup();
-const app = express();
+// CORS configuration
+const corsConfig = {
+  origin: "*",
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+};
+
+// Middleware
 app.use("/webhook", express.raw({ type: "application/json" }));
 app.use(logRequest);
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-passportStartup(app);
 app.use(morgan("combined"));
+app.use(cors(corsConfig));
 
-// CORS configuration
-if (!isProduction) {
-  app.use(cors({
-    origin: "*",
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    credentials: true,
-  }));
-}
+// Initialize database and passport
+databaseSetup();
+passportStartup(app);
 
 // API routes
 app.use("/api/auth", Authentication.verifyToken);
 app.use("/api/admin", Authentication.verifyToken);
 app.use("/api/admin", verifyRole(Role.SUPER_ADMIN, Role.ADMIN));
 
-// Initialize server
-const server: http.Server = isProduction
-  ? https.createServer({
-      key: fs.readFileSync(process.env.SERVER_KEY_PATH || "server.key"),
-      cert: fs.readFileSync(process.env.SERVER_CERT_PATH || "server.cert"),
-    }, app)
-  : http.createServer(app);
+// Server setup
+let server: http.Server;
+
+if (isProduction) {
+  server = https.createServer({
+    key: fs.readFileSync(process.env.SERVER_KEY_PATH || "server.key"),
+    cert: fs.readFileSync(process.env.SERVER_CERT_PATH || "server.cert"),
+  }, app);
+} else {
+  server = http.createServer(app);
+}
 
 // Initialize Socket.io
-export const io: Server = new Server(server, {
-  cors: {
-    origin: "*",
-    methods: ["PUT", "GET", "POST", "DELETE", "OPTIONS"],
-    credentials: true,
-  },
+export const io: Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any> = new Server(server, {
+  cors: corsConfig,
   transports: ["polling", "websocket"],
 });
 
@@ -201,6 +204,8 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log("User disconnected");
   });
+
+  // Handle other socket events as needed
 });
 
 // Start the server
@@ -213,4 +218,3 @@ routes.initRoutes(app);
 app.use(handleError);
 
 export default app;
-
