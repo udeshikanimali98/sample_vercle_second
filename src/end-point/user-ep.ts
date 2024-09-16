@@ -200,6 +200,10 @@ export namespace UserEp {
       } else {
         roleEnum = Role.TEACHER;
       }
+
+      if (!firstName || firstName.trim() === '') {
+        return Util.sendError(res, "First name cannot be null or empty!");
+      }
   
       // Create new user data
       const data: DUser = { 
