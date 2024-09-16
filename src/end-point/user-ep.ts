@@ -162,24 +162,21 @@ export namespace UserEp {
   //     Util.sendError(res, "An internal server error occurred", 500);
   //   }
   // }
+
+
   export async function register(req: Request, res: Response) {
-    const role = req.body.role;
-    const firstName = req.body.firstName;
-    const lastName = req.body.lastName;
-    const email = req.body.email;
-    const phoneNumber = req.body.phoneNumber;
-    const password = req.body.password;
-    const address = req.body.address;
+    const { role, firstName, lastName, email, phoneNumber, password, address } = req.body;
   
     const errors = validationResult(req);
-  
     if (!errors.isEmpty()) {
       return res.sendError(errors.array()[0]["msg"]);
     }
   
     try {
+      // Check if email or phone number already exists
       const existingEmail = await UserDao.getUserByEmail(email);
       const existingPhone = await UserDao.getUserByPhone(phoneNumber); 
+  
       if (existingEmail) {
         return Util.sendError(res, "Email already exists!");
       }
@@ -187,6 +184,7 @@ export namespace UserEp {
         return Util.sendError(res, "Phone number already exists!");
       }
   
+      // Validate password strength
       const isPasswordValid = passwordValidation(password);
       if (!isPasswordValid) {
         return Util.sendError(
@@ -195,6 +193,7 @@ export namespace UserEp {
         );
       }
   
+      // Determine user role
       let roleEnum: Role;
       if (role === "CHILD") {
         roleEnum = Role.CHILD;
@@ -202,30 +201,100 @@ export namespace UserEp {
         roleEnum = Role.TEACHER;
       }
   
+      // Create new user data
       const data: DUser = { 
         role: roleEnum,
-        firstName: firstName,
-        lastName: lastName,
-        email: email,
-        phoneNumber: phoneNumber,
-        password: password,
-        address: address
+        firstName,
+        lastName,
+        email,
+        phoneNumber,
+        password,
+        address
       };
   
+      // Create user in database
       const newUser = await UserDao.createCustomer(data);
   
+      // Send welcome email
       await EmailService.sendWelcomeEmail(
-        req.body.email,
+        email,
         "Welcome to ClassQ",
         "Welcome to ClassQ",
         `Thank you for registering with us.`
       );
   
+      // Send success response
       Util.sendSuccess(res, newUser, "User registered");
     } catch (error) {
-      return res.sendError(error + " ");
+      console.error("Error during user registration:", error);
+      Util.sendError(res, "An internal server error occurred", 500);
     }
   }
+  
+  // export async function register(req: Request, res: Response) {
+  //   const role = req.body.role;
+  //   const firstName = req.body.firstName;
+  //   const lastName = req.body.lastName;
+  //   const email = req.body.email;
+  //   const phoneNumber = req.body.phoneNumber;
+  //   const password = req.body.password;
+  //   const address = req.body.address;
+  
+  //   const errors = validationResult(req);
+  
+  //   if (!errors.isEmpty()) {
+  //     return res.sendError(errors.array()[0]["msg"]);
+  //   }
+  
+  //   try {
+  //     const existingEmail = await UserDao.getUserByEmail(email);
+  //     const existingPhone = await UserDao.getUserByPhone(phoneNumber); 
+  //     if (existingEmail) {
+  //       return Util.sendError(res, "Email already exists!");
+  //     }
+  //     if (existingPhone) {
+  //       return Util.sendError(res, "Phone number already exists!");
+  //     }
+  
+  //     const isPasswordValid = passwordValidation(password);
+  //     if (!isPasswordValid) {
+  //       return Util.sendError(
+  //         res,
+  //         "Password must be at least 8 characters long, contain one special character, and one uppercase letter"
+  //       );
+  //     }
+  
+  //     let roleEnum: Role;
+  //     if (role === "CHILD") {
+  //       roleEnum = Role.CHILD;
+  //     } else {
+  //       roleEnum = Role.TEACHER;
+  //     }
+  
+  //     const data: DUser = { 
+  //       role: roleEnum,
+  //       firstName: firstName,
+  //       lastName: lastName,
+  //       email: email,
+  //       phoneNumber: phoneNumber,
+  //       password: password,
+  //       address: address
+  //     };
+  
+  //     const newUser = await UserDao.createCustomer(data);
+  
+  //     await EmailService.sendWelcomeEmail(
+  //       req.body.email,
+  //       "Welcome to ClassQ",
+  //       "Welcome to ClassQ",
+  //       `Thank you for registering with us.`
+  //     );
+  
+  //     Util.sendSuccess(res, newUser, "User registered");
+  //   } catch (error) {
+  //     Util.sendError(res, "An internal server error occurred", 500);
+  //   }
+  // }
 
   
 
@@ -266,7 +335,6 @@ export namespace UserEp {
         Util.sendSuccess(res, isPasswordValid, "User logged succefully");
       }
     } catch (error) {
-      console.error("Error in loginWithEmailOrPhone:", error);
       Util.sendError(res, "An internal server error occurred", 500);
     }
   }
@@ -343,7 +411,7 @@ export namespace UserEp {
           "Let's recover your ClassQ account.",
           `Hi there, thank you for signing up with ClassQ. Use the following code to recover your account.`
         );
-        console.log("222222222")
+      
         Util.sendSuccess(res, null, "OTP generated successfully");
       }
 

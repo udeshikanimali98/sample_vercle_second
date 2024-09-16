@@ -12,7 +12,7 @@ declare namespace Express {
 
   interface User {
     _id: ObjectId;
-    name: string;
+    //name: string;
     email: string;
     role: string;
     permissions: string[];

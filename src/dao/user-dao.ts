@@ -27,12 +27,30 @@ export namespace UserDao {
   //   return customer; 
   // }
 
+  // export async function createCustomer(user: Partial<DUser>): Promise<IUser> {
+  //   const iUser = new User(user);
+  //   const newUser = await iUser.save();
+  //   console.log(newUser)
+  //   return newUser;
+  // }
+
   export async function createCustomer(user: Partial<DUser>): Promise<IUser> {
-    const iUser = new User(user);
-    const newUser = await iUser.save();
-    console.log(newUser)
-    return newUser;
+    try {
+      const iUser = new User(user);
+      
+      // Validate if all required fields are present
+      if (!user.email || !user.phoneNumber || !user.password || !user.role || !user.firstName) {
+        throw new Error("Missing required fields in user data");
+      }
+  
+      // Save the new user
+      const newUser = await iUser.save();
+      return newUser;
+    } catch (error) {
+      throw error; 
+    }
   }
+  
   
   
   export async function authenticateUser(
@@ -50,7 +68,6 @@ export namespace UserDao {
           role: user.role,
         };
       } else {
-        console.log("Incorrect email/password combination!");
         return false;
       }
     } else {
