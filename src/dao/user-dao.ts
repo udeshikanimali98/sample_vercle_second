@@ -1,6 +1,6 @@
 //import { AppLogger } from "../common/logging";
 import { ApplicationError } from "../common/application-error";
-import { DUser, IUser, Role, UserDetails } from "../models/user-model";
+import { DUser, IUser} from "../models/user-model";
 import User from "../schemas/user-schema";
 import { StringOrObjectId } from "../common/util";
 

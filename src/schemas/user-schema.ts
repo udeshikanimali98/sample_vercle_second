@@ -1,7 +1,7 @@
 import * as mongoose from "mongoose";
 import { Schema } from "mongoose";
 import * as bcrypt from "bcryptjs";
-import { IUser, Permission, Role } from "../models/user-model";
+import { IUser, Role } from "../models/user-model";
 import { checkPermission } from "../middleware/verify-permission";
 
 
@@ -27,30 +27,35 @@ export const UserSchemaOptions: mongoose.SchemaOptions = {
 
 export const userSchema = new mongoose.Schema(
   {
+    role: {
+      type: Schema.Types.String,
+      required: true,
+    },
+    firstName: {
+      type: Schema.Types.String,
+      required: true,
+    },
+    lastName: {
+      type: Schema.Types.String,
+      required: false,
+    },
     email: {
       type: Schema.Types.String,
       unique: true,
       required: true,
     },
-    name: {
+    phoneNumber: {
       type: Schema.Types.String,
       required: true,
     },
     password: {
       type: Schema.Types.String,
+      required: true,
+    },
+    address: {
+      type: Schema.Types.String,
       required: false,
     },
-    role: {
-      type: Schema.Types.String,
-      
-      required: true,
-    },
-    phoneNumber: {
-      type: Schema.Types.String,
-     
-      required: true,
-    },
-    
   },
   UserSchemaOptions
 );
@@ -95,14 +100,6 @@ userSchema.methods.comparePassword = function (
       return resolve(isMatch);
     });
   });
-};
-
-userSchema.methods.hasPermission = function (
-  ...permissions: Permission[]
-): boolean {
-  // @ts-ignore
-  const [success] = checkPermission(this, permissions);
-  return success;
 };
 
 const User = mongoose.model<IUser>("User", userSchema);

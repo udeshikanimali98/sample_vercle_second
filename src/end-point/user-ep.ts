@@ -96,29 +96,96 @@ export namespace UserEp {
   //   }
   // }
 
-  export async function register(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) {
-    try {
+  // export async function register(
+  //   req: Request,
+  //   res: Response,
+  //   next: NextFunction
+  // ) {
+  //   try {
      
-      const errors = validationResult(req);
+  //     const errors = validationResult(req);
   
-      if (!errors.isEmpty()) {
-        return res.sendError(errors.array()[0]["msg"]);
-      }
+  //     if (!errors.isEmpty()) {
+  //       return res.sendError(errors.array()[0]["msg"]);
+  //     }
   
-      const existingEmail = await UserDao.getUserByEmail(req.body.email);
-      const existingPhone = await UserDao.getUserByPhone(req.body.phoneNumber); 
+  //     const existingEmail = await UserDao.getUserByEmail(req.body.email);
+  //     const existingPhone = await UserDao.getUserByPhone(req.body.phoneNumber); 
+  //     if (existingEmail) {
+  //       return Util.sendError(res, "Email already exists!");
+  //     }
+  //     if (existingPhone) {
+  //       return Util.sendError(res, "Phone number already exists!");
+  //     }
+  
+  //     const password = req.body.password;
+  
+  //     const isPasswordValid = passwordValidation(password);
+  //     if (!isPasswordValid) {
+  //       return Util.sendError(
+  //         res,
+  //         "Password must be at least 8 characters long, contain one special character, and one uppercase letter"
+  //       );
+  //     }
+  
+  //     if (password !== req.body.confirmPassword) {
+  //       return Util.sendError(res, "Password and confirm password do not match");
+  //     }
+  
+  //     let roleEnum: Role;
+  //     if (req.body.role === "CHILD") {
+  //       roleEnum = Role.CHILD;
+  //     } else {
+  //       roleEnum = Role.TEACHER;
+  //     }
+  
+  //     const data: DUser = {
+  //       email: req.body.email,
+  //       phoneNumber: req.body.phoneNumber,
+  //       name: req.body.name,
+  //       password: password,
+  //       role: roleEnum,
+  //     };
+  
+  //     const token = await UserDao.createCustomer(data);
+  
+  //     await EmailService.sendWelcomeEmail(
+  //       req.body.email,
+  //       "Welcome to ClassQ",
+  //       "Welcome to ClassQ",
+  //       `Thank you for registering with us.`
+  //     );
+  
+  //     Util.sendSuccess(res, token, "User registered");
+  //   } catch (error) {
+  //     console.error("Error in CustomerEp.register:", error);
+  //     Util.sendError(res, "An internal server error occurred", 500);
+  //   }
+  // }
+  export async function register(req: Request, res: Response) {
+    const role = req.body.role;
+    const firstName = req.body.firstName;
+    const lastName = req.body.lastName;
+    const email = req.body.email;
+    const phoneNumber = req.body.phoneNumber;
+    const password = req.body.password;
+    const address = req.body.address;
+  
+    const errors = validationResult(req);
+  
+    if (!errors.isEmpty()) {
+      return res.sendError(errors.array()[0]["msg"]);
+    }
+  
+    try {
+      const existingEmail = await UserDao.getUserByEmail(email);
+      const existingPhone = await UserDao.getUserByPhone(phoneNumber); 
       if (existingEmail) {
         return Util.sendError(res, "Email already exists!");
       }
       if (existingPhone) {
         return Util.sendError(res, "Phone number already exists!");
       }
-  
-      const password = req.body.password;
   
       const isPasswordValid = passwordValidation(password);
       if (!isPasswordValid) {
@@ -128,26 +195,24 @@ export namespace UserEp {
         );
       }
   
-      if (password !== req.body.confirmPassword) {
-        return Util.sendError(res, "Password and confirm password do not match");
-      }
-  
       let roleEnum: Role;
-      if (req.body.role === "CHILD") {
+      if (role === "CHILD") {
         roleEnum = Role.CHILD;
       } else {
         roleEnum = Role.TEACHER;
       }
   
-      const data: DUser = {
-        email: req.body.email,
-        phoneNumber: req.body.phoneNumber,
-        name: req.body.name,
-        password: password,
+      const data: DUser = { 
         role: roleEnum,
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        phoneNumber: phoneNumber,
+        password: password,
+        address: address
       };
   
-      const token = await UserDao.createCustomer(data);
+      const newUser = await UserDao.createCustomer(data);
   
       await EmailService.sendWelcomeEmail(
         req.body.email,
@@ -156,12 +221,12 @@ export namespace UserEp {
         `Thank you for registering with us.`
       );
   
-      Util.sendSuccess(res, token, "User registered");
+      Util.sendSuccess(res, newUser, "User registered");
     } catch (error) {
-      console.error("Error in CustomerEp.register:", error);
-      Util.sendError(res, "An internal server error occurred", 500);
+      return res.sendError(error + " ");
     }
   }
+
   
 
   export async function login(

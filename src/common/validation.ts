@@ -16,6 +16,11 @@ export const Validation = {
   //   check("phone")
   //     .isMobilePhone(<MobilePhoneLocale>"SL")
   //     .withMessage("Phone number is invalid or outside the SL"),
+  firstName: () =>
+    check("firstName")
+      .not()
+      .isEmpty()
+      .withMessage("FirstName is required!"),
   password: () =>
     check("password")
       .isString()
@@ -34,14 +39,6 @@ export const Validation = {
   role: (role: Role) =>
     check("role").equals(role).withMessage("Unauthorized user role!"),
   noPermissions: () => check("permissions").not().exists(),
-  name: () =>
-    check("name")
-      .not()
-      .isEmpty()
-      .withMessage("Name is required!")
-      .isString()
-      .isLength({ max: 1000 })
-      .withMessage("Name field should not be more than 1000 chars long!"),
   objectId: (key: string = "_id") =>
     check(key)
       .not()
