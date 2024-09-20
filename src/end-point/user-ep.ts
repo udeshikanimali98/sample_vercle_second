@@ -7,7 +7,7 @@ import {
   Validation,
   passwordValidation,
 } from "../common/validation";
-import { DUser, Role} from "../models/user-model";
+import { DUser, Gender, Role} from "../models/user-model";
 
 
 import { EmailService } from "../services/mail";
@@ -165,7 +165,7 @@ export namespace UserEp {
 
 
   export async function register(req: Request, res: Response) {
-    const { role, firstName, lastName, email, phoneNumber, password, address } = req.body;
+    const { role, firstName, lastName, email, phoneNumber, password, address, gender } = req.body;
   
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -204,16 +204,30 @@ export namespace UserEp {
       if (!firstName || firstName.trim() === '') {
         return Util.sendError(res, "First name cannot be null or empty!");
       }
+
+      if (!gender || gender.trim() === '') {
+        return Util.sendError(res, "Gender cannot be null or empty!");
+      }
+
+      let genderEnum: Gender;
+      if (gender === "MALE") {
+        genderEnum = Gender.MALE;
+      } else if(gender === "FEMALE") {
+        genderEnum = Gender.FEMALE;
+      } else {
+        genderEnum = Gender.OTHER;
+      }
   
       // Create new user data
       const data: DUser = { 
         role: roleEnum,
-        firstName,
-        lastName,
-        email,
-        phoneNumber,
-        password,
-        address
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        phoneNumber: phoneNumber,
+        password: password,
+        address: address,
+        gender: genderEnum
       };
   
       // Create user in database

@@ -84,6 +84,12 @@ export enum Role {
   TEACHER = "TEACHER"
 }
 
+export enum Gender {
+  MALE = "MALE",
+  FEMALE = "FEMALE",
+  OTHER ="OTHER",
+}
+
 interface CommonAttributes {
   role: Role;
   firstName: string;
@@ -92,6 +98,7 @@ interface CommonAttributes {
   phoneNumber: string;
   password: string;
   address?: string;
+  gender: string;
 }
 
 export interface DUser extends CommonAttributes {

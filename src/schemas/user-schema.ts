@@ -1,7 +1,7 @@
 import * as mongoose from "mongoose";
 import { Schema } from "mongoose";
 import * as bcrypt from "bcryptjs";
-import { IUser, Role } from "../models/user-model";
+import { Gender, IUser, Role } from "../models/user-model";
 import { checkPermission } from "../middleware/verify-permission";
 
 
@@ -55,6 +55,10 @@ export const userSchema = new mongoose.Schema(
     address: {
       type: Schema.Types.String,
       required: false,
+    },
+    gender: {
+      type: Schema.Types.String,
+      default: Gender.MALE
     },
   },
   UserSchemaOptions
