@@ -407,7 +407,7 @@ export namespace UserEp {
   
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.sendError(errors.array()[0].msg);
+      return Util.sendError(res, errors.array()[0]["msg"]);
     }
   
     if (oldPassword === newPassword) {
