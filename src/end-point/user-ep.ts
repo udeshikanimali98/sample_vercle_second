@@ -452,6 +452,64 @@ export namespace UserEp {
     }
   } 
 
+  export async function logout(req: Request, res: Response, next: NextFunction) {
+    try {
+      // You can handle token/session invalidation here if required.
+      // For example, if you're using token-based authentication, you might
+      // blacklist the token or simply tell the client to delete it.
+  
+      // Respond with a message
+      return Util.sendSuccess(res, "Logged out successfully");
+    } catch (error) {
+      return Util.sendError(res, "An error occurred during logout", 500);
+    }
+  }
+  export async function deleteUserByUserId(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.params.userId;
+
+      // Check if the user ID exists
+      const user = await UserDao.getUserById(userId);
+      if (!user) {
+        return Util.sendError(res, "User not found", 404);
+      }
+
+      // Delete the user
+      await UserDao.deleteUserById(userId);
+
+      // Respond with success
+      return Util.sendSuccess(res, null, "User deleted successfully");
+    } catch (error: any) {
+      console.error("Error deleting user:", error);
+      return Util.sendError(res, "An internal server error occurred", 500);
+    }
+  }
+
+  export async function getMe(req: Request, res: Response) {
+    const userId = req.user?._id.toString();
+    try {
+
+      if (!userId) {
+        return Util.sendError(res, "User not found");
+      }
+    
+      if (!userId) {
+        return Util.sendError(res,"User ID is missing.");
+      }
+      
+      const user = await UserDao.getUserById(userId);
+
+      if (!user) {
+        return Util.sendError(res, "Something went wrong while retrieving your details. Please try again later.");
+      }
+      
+      return Util.sendSuccess(res, user, "User received");
+    } catch (error) {
+      return Util.sendError(res, error + "");
+    }
+  }
+
+
 }
 
   

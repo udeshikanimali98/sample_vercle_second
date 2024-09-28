@@ -101,11 +101,24 @@ export namespace UserDao {
   export async function getUserById(id: string): Promise<IUser> {
     let user = await User.findById(id);
     if (!user) {
-      throw new ApplicationError("User not found for Id: " + id);
+      throw new ApplicationError("User not found for Id: ");
     }
     user.lastLogin = new Date();
     await user.save();
     return user;
   }
+
+  export async function deleteUserById(id: string): Promise<IUser | null> {
+    try {
+      const deletedUser = await User.findByIdAndDelete(id);
+      if (!deletedUser) {
+        throw new ApplicationError(`User with ID ${id} not found.`);
+      }
+      return deletedUser;
+    } catch (error) {
+      throw new ApplicationError("Error deleting user with ID ");
+    }
+  }
+  
 
 }

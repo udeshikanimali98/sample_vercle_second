@@ -17,5 +17,16 @@ export function initAuthRoutes(app: Express) {
   );
 
   app.post("/api/auth/changePassword", Authentication.verifyToken, UserEp.changePasswordValidationRules(), UserEp.changePassword);
+
+  app.post(
+    "/api/auth/logout",
+    Authentication.verifyToken,
+    UserEp.logout
+  );
+
+  app.delete("/api/auth/delete-user/:userId", Authentication.verifyToken, UserEp.deleteUserByUserId);
+
+  app.get("/api/auth/me", Authentication.verifyToken, UserEp.getMe);
+
   
 }
