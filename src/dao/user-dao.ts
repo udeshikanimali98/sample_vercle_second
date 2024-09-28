@@ -65,7 +65,8 @@ export namespace UserDao {
         const tokenString = await user.createAccessToken();  
         return {
           token: tokenString,
-          role: user.role,
+          //role: user.role,
+          user: user
         };
       } else {
         return false;
