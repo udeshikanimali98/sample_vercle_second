@@ -88,7 +88,6 @@ export namespace UserDao {
       );
 
       if (result) {
-        
         return result;
       } else {
         throw new Error(`Customer with ID ${userId} not found.`);
@@ -97,6 +96,16 @@ export namespace UserDao {
     
       throw error;
     }
+  }
+
+  export async function getUserById(id: string): Promise<IUser> {
+    let user = await User.findById(id);
+    if (!user) {
+      throw new ApplicationError("User not found for Id: " + id);
+    }
+    user.lastLogin = new Date();
+    await user.save();
+    return user;
   }
 
 }

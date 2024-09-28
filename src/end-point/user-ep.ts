@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { validationResult } from "express-validator";
+import { check, validationResult } from "express-validator";
 import { Util } from "../common/util";
 import { UserDao } from "../dao/user-dao";
 import {
@@ -9,7 +9,6 @@ import {
 } from "../common/validation";
 import { DUser, Gender, Role} from "../models/user-model";
 
-
 import { EmailService } from "../services/mail";
 import { OTPDao } from "../dao/otp-dao";
 import { OtpTypes } from "../enums/otpTypes";
@@ -17,6 +16,31 @@ import { OtpTypes } from "../enums/otpTypes";
 export namespace UserEp {
   export function authValidationRules() {
     return [Validation.email(), Validation.password()];
+  }
+
+  export function changePasswordValidationRules() {
+    return [
+      check("oldPassword")
+        .isString()
+        .not()
+        .isEmpty()
+        .withMessage("Password is required.")
+        .isLength({ min: 6, max: 40 })
+        .withMessage("Password must be at least 6 chars long & not more than 40 chars long.")
+        .not()
+        .isIn(["123", "password", "god", "abc"])
+        .withMessage("Do not use a common word as the password"),
+      check("newPassword")
+        .isString()
+        .not()
+        .isEmpty()
+        .withMessage("Password is required.")
+        .isLength({ min: 6, max: 40 })
+        .withMessage("Password must be at least 6 chars long & not more than 40 chars long.")
+        .not()
+        .isIn(["123", "password", "god", "abc"])
+        .withMessage("Do not use a common word as the password"),  
+    ];
   }
 
   export async function authenticatewithEmail(
@@ -36,133 +60,6 @@ export namespace UserEp {
       })
       .catch(next);
   }
-
-  // export async function register(
-  //   req: Request,
-  //   res: Response,
-  //   next: NextFunction
-  // ) {
-  //   try {
-  //     const errors = validationResult(req);
-
-  //     if (!errors.isEmpty()) {
-  //       return Util.sendError(res, errors.array()[0]["msg"]);
-  //     }
-
-  //     const existingUser = await UserDao.getUserByEmail(req.body.email);
-
-  //     if (existingUser !== null) {
-  //       return Util.sendError(res, "Email already exists!");
-  //     }
-
-  //     const password = req.body.password;
-
-  //     // Password requirements: at least 8 characters, one special character, one capital letter
-  //     const isPasswordValid = passwordValidation(password);
-  //     if (!isPasswordValid) {
-  //       return Util.sendError(
-  //         res,
-  //         "Password must be at least 8 characters long and contain at least one special character and one uppercase letter"
-  //       );
-  //     }
-
-  //     if (password !== req.body.confirmPassword) {
-  //       return Util.sendError(
-  //         res,
-  //         "Password and confirmed password do not match"
-  //       );
-  //     }
-
-  //     const data: DUser = {
-       
-  //       email: req.body.email,
-  //       phoneNumber: req.body.phoneNumber,
-  //       name: req.body.name,
-  //       password: password,
-
-  //     };
-
-  //     const token = await UserDao.createCustomer(data);
-
-  //     await EmailService.sendWelcomeEmail(req.body.email,
-  //           "Welcome to ClassQ",
-  //           "Welcome to ClassQ",
-  //           `Thank you for registering with us.`);
-
-  //     Util.sendSuccess(res, token, "User registered");
-  //   } catch (error) {
-  //     console.error("Error in CustomerEp.register:", error);
-  //     Util.sendError(res, "An internal server error occurred", 500);
-  //   }
-  // }
-
-  // export async function register(
-  //   req: Request,
-  //   res: Response,
-  //   next: NextFunction
-  // ) {
-  //   try {
-     
-  //     const errors = validationResult(req);
-  
-  //     if (!errors.isEmpty()) {
-  //       return res.sendError(errors.array()[0]["msg"]);
-  //     }
-  
-  //     const existingEmail = await UserDao.getUserByEmail(req.body.email);
-  //     const existingPhone = await UserDao.getUserByPhone(req.body.phoneNumber); 
-  //     if (existingEmail) {
-  //       return Util.sendError(res, "Email already exists!");
-  //     }
-  //     if (existingPhone) {
-  //       return Util.sendError(res, "Phone number already exists!");
-  //     }
-  
-  //     const password = req.body.password;
-  
-  //     const isPasswordValid = passwordValidation(password);
-  //     if (!isPasswordValid) {
-  //       return Util.sendError(
-  //         res,
-  //         "Password must be at least 8 characters long, contain one special character, and one uppercase letter"
-  //       );
-  //     }
-  
-  //     if (password !== req.body.confirmPassword) {
-  //       return Util.sendError(res, "Password and confirm password do not match");
-  //     }
-  
-  //     let roleEnum: Role;
-  //     if (req.body.role === "CHILD") {
-  //       roleEnum = Role.CHILD;
-  //     } else {
-  //       roleEnum = Role.TEACHER;
-  //     }
-  
-  //     const data: DUser = {
-  //       email: req.body.email,
-  //       phoneNumber: req.body.phoneNumber,
-  //       name: req.body.name,
-  //       password: password,
-  //       role: roleEnum,
-  //     };
-  
-  //     const token = await UserDao.createCustomer(data);
-  
-  //     await EmailService.sendWelcomeEmail(
-  //       req.body.email,
-  //       "Welcome to ClassQ",
-  //       "Welcome to ClassQ",
-  //       `Thank you for registering with us.`
-  //     );
-  
-  //     Util.sendSuccess(res, token, "User registered");
-  //   } catch (error) {
-  //     console.error("Error in CustomerEp.register:", error);
-  //     Util.sendError(res, "An internal server error occurred", 500);
-  //   }
-  // }
-
 
   export async function register(req: Request, res: Response) {
     const { role, firstName, lastName, email, phoneNumber, password, address, gender } = req.body;
@@ -248,73 +145,6 @@ export namespace UserEp {
       Util.sendError(res, "An internal server error occurred", 500);
     }
   }
-  
-  // export async function register(req: Request, res: Response) {
-  //   const role = req.body.role;
-  //   const firstName = req.body.firstName;
-  //   const lastName = req.body.lastName;
-  //   const email = req.body.email;
-  //   const phoneNumber = req.body.phoneNumber;
-  //   const password = req.body.password;
-  //   const address = req.body.address;
-  
-  //   const errors = validationResult(req);
-  
-  //   if (!errors.isEmpty()) {
-  //     return res.sendError(errors.array()[0]["msg"]);
-  //   }
-  
-  //   try {
-  //     const existingEmail = await UserDao.getUserByEmail(email);
-  //     const existingPhone = await UserDao.getUserByPhone(phoneNumber); 
-  //     if (existingEmail) {
-  //       return Util.sendError(res, "Email already exists!");
-  //     }
-  //     if (existingPhone) {
-  //       return Util.sendError(res, "Phone number already exists!");
-  //     }
-  
-  //     const isPasswordValid = passwordValidation(password);
-  //     if (!isPasswordValid) {
-  //       return Util.sendError(
-  //         res,
-  //         "Password must be at least 8 characters long, contain one special character, and one uppercase letter"
-  //       );
-  //     }
-  
-  //     let roleEnum: Role;
-  //     if (role === "CHILD") {
-  //       roleEnum = Role.CHILD;
-  //     } else {
-  //       roleEnum = Role.TEACHER;
-  //     }
-  
-  //     const data: DUser = { 
-  //       role: roleEnum,
-  //       firstName: firstName,
-  //       lastName: lastName,
-  //       email: email,
-  //       phoneNumber: phoneNumber,
-  //       password: password,
-  //       address: address
-  //     };
-  
-  //     const newUser = await UserDao.createCustomer(data);
-  
-  //     await EmailService.sendWelcomeEmail(
-  //       req.body.email,
-  //       "Welcome to ClassQ",
-  //       "Welcome to ClassQ",
-  //       `Thank you for registering with us.`
-  //     );
-  
-  //     Util.sendSuccess(res, newUser, "User registered");
-  //   } catch (error) {
-  //     Util.sendError(res, "An internal server error occurred", 500);
-  //   }
-  // }
-
-  
 
   export async function login(
     req: Request,
@@ -571,6 +401,56 @@ export namespace UserEp {
       next(error);
     }
   }
+
+  export async function changePassword(req: Request, res: Response, next: NextFunction) {
+    const { oldPassword, newPassword } = req.body;
+  
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.sendError(errors.array()[0].msg);
+    }
+  
+    if (oldPassword === newPassword) {
+      return Util.sendError(res, "New and old passwords cannot be the same.");
+    }
+
+    const userId = req.user?._id.toString();
+    if (!userId) {
+      return Util.sendError(res, "User not found");
+    }
+  
+    if (!userId) {
+      return Util.sendError(res,"User ID is missing.");
+    }
+  
+    try {
+      const user = await UserDao.getUserById(userId);
+  
+      if (!user) {
+        return Util.sendError(res,"User not found.");
+      }
+   
+      const isMatch = await user.comparePassword(oldPassword);
+     
+      if (!isMatch) {
+        return Util.sendError(res, "Incorrect old password.");
+      }
+     
+      const hashedPassword = await Util.passwordHashing(newPassword);
+  
+      const updatedPassword = { password: hashedPassword };
+   
+      const updatedUser = await UserDao.updateUser(userId, updatedPassword);
+     
+      if (!updatedUser) {
+        return Util.sendError(res,"Failed to change the password.");
+      }
+  
+      return Util.sendSuccess(res, updatedUser, "Password successfully changed.");
+    } catch (error) {
+      return Util.sendError(res, "An error occurred while changing the password.");
+    }
+  } 
 
 }
 
