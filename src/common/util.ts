@@ -12,17 +12,68 @@ export type ObjectIdOr<T extends mongoose.Document> =
 export type StringOrObjectId = string | mongoose.Types.ObjectId;
 
 export namespace Util {
+  // export function sendSuccess(
+  //   res: Response,
+  //   data: any,
+  //   message?: string | null
+  // ) {
+  //   return res.send({ success: true, data: data, message: message || null });
+  // }
+
+  // export function sendError(res: Response, error: any, errorCode = 0) {
+  //   if (typeof error === "string") {
+  //     return res.send({
+  //       success: false,
+  //       error: error,
+  //       errorCode: errorCode,
+  //       message: error,
+  //     });
+  //   } else {
+  //     if (!error) {
+  //       error = { stack: null, message: "Unknown Error" };
+  //     }
+  //     //ErrorLogger.error(error.stack);
+  //     return res.send({
+  //       success: false,
+  //       error: error.message,
+  //       errorData: error,
+  //       errorCode: errorCode,
+  //       message: error.message,
+  //     });
+  //   }
+  // }
+
   export function sendSuccess(
     res: Response,
     data: any,
-    message?: string | null
+    message?: string,
+    statusCode = 200 
   ) {
-    return res.send({ success: true, data: data, message: message || null });
+    return res.status(statusCode).send({
+      success: true,
+      data: data,
+      message: message || null,
+    });
   }
 
-  export function sendError(res: Response, error: any, errorCode = 0) {
+  export function sendUnauthorized(
+    res: Response,
+    message: string = "Unauthorized access"
+  ) {
+    return res.status(401).send({
+      success: false,
+      error: "Unauthorized",
+      message: message,
+    });
+  }
+
+  export function sendError(
+    res: Response,
+    error: any,
+    errorCode = 400 
+  ) {
     if (typeof error === "string") {
-      return res.send({
+      return res.status(errorCode).send({
         success: false,
         error: error,
         errorCode: errorCode,
@@ -32,8 +83,7 @@ export namespace Util {
       if (!error) {
         error = { stack: null, message: "Unknown Error" };
       }
-      //ErrorLogger.error(error.stack);
-      return res.send({
+      return res.status(errorCode).send({
         success: false,
         error: error.message,
         errorData: error,

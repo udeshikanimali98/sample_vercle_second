@@ -11,7 +11,7 @@ export class Authentication {
         if (err || !user) {
           console.log("Login Failed. reason: ${info}")
           //AppLogger.error(`Login Failed. reason: ${info}`);
-          return Util.sendError(res, info);
+          return Util.sendUnauthorized(res, info);
         }
         req.user = user;
         req.body.user = user._id;
